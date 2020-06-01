@@ -62,6 +62,10 @@ void ShareableValue::adapt(jsi::Runtime &rt, const jsi::Value &value, ValueType 
       type = ObjectType;
       frozenObject = object.getHostObject<FrozenObject>(rt);
       adaptCache(rt, value);
+    } else if (object.hasProperty(rt, "__internalFrozen")) {
+      type = ObjectType;
+      frozenObject = object.getProperty(rt, "__internalFrozen").asObject(rt).getHostObject<FrozenObject>(rt);
+      adaptCache(rt, value);
     } else if (objectType == RemoteObjectType) {
       type = RemoteObjectType;
       remoteObject = std::make_shared<RemoteObject>(rt, object, module);
@@ -101,6 +105,18 @@ jsi::Object ShareableValue::createHost(jsi::Runtime &rt, std::shared_ptr<jsi::Ho
   return jsi::Object::createFromHostObject(rt, host);
 }
 
+jsi::Value createFrozenWrapper(ShareableValue *sv, jsi::Runtime &rt, std::shared_ptr<FrozenObject> frozenObject) {
+  jsi::Object __internalFrozen = sv->createHost(rt, frozenObject);
+  auto propertyNames = frozenObject->getPropertyNames(rt);
+  jsi::Object obj(rt);
+  for (auto &name : propertyNames) {
+    obj.setProperty(rt, name, __internalFrozen.getProperty(rt, name));
+  }
+  obj.setProperty(rt, "__internalFrozen", __internalFrozen);
+  jsi::Function freeze = rt.global().getPropertyAsObject(rt, "Object").getPropertyAsFunction(rt, "freeze");
+  return freeze.call(rt, obj);
+}
+
 jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
   switch (type) {
     case UndefinedType:
@@ -114,7 +130,7 @@ jsi::Value ShareableValue::toJSValue(jsi::Runtime &rt) {
     case StringType:
       return jsi::Value(rt, jsi::String::createFromAscii(rt, stringValue));
     case ObjectType:
-      return createHost(rt, frozenObject);
+      return createFrozenWrapper(this, rt, frozenObject);
     case ArrayType: {
       jsi::Array array(rt, frozenArray.size());
       for (size_t i = 0; i < frozenArray.size(); i++) {

@@ -37,6 +37,9 @@ friend WorkletsCache;
 friend void extractMutables(jsi::Runtime &rt,
                             std::shared_ptr<ShareableValue> sv,
                             std::vector<std::shared_ptr<MutableValue>> &res);
+friend jsi::Value createFrozenWrapper(ShareableValue *sv,
+                                      jsi::Runtime &rt,
+                                      std::shared_ptr<FrozenObject> frozenObject);
 private:
   NativeReanimatedModule *module;
   bool boolValue;
