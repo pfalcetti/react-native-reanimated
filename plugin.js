@@ -31,6 +31,7 @@ const globals = new Set([
   'UIManager',
   'requestAnimationFrame',
   '_WORKLET',
+  'arguments',
   '_log',
   '_updateProps',
   'RegExp',
