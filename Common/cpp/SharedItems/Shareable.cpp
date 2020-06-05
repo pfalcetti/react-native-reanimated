@@ -112,8 +112,17 @@ jsi::Value createFrozenWrapper(ShareableValue *sv, jsi::Runtime &rt, std::shared
   for (auto &name : propertyNames) {
     obj.setProperty(rt, name, __internalFrozen.getProperty(rt, name));
   }
-  obj.setProperty(rt, "__internalFrozen", __internalFrozen);
-  jsi::Function freeze = rt.global().getPropertyAsObject(rt, "Object").getPropertyAsFunction(rt, "freeze");
+  jsi::Object globalObject = rt.global().getPropertyAsObject(rt, "Object");
+  jsi::Function freeze = globalObject.getPropertyAsFunction(rt, "freeze");
+  jsi::Function defineProperty = globalObject.getPropertyAsFunction(rt, "defineProperty");
+  jsi::String internalPropName = jsi::String::createFromUtf8(rt, "__internalFrozen");
+  
+  jsi::Object paramForDefineProperty(rt);
+  paramForDefineProperty.setProperty(rt, "enumerable", false);
+  paramForDefineProperty.setProperty(rt, "value", __internalFrozen);
+  
+  defineProperty.call(rt, obj, internalPropName, paramForDefineProperty);
+  
   return freeze.call(rt, obj);
 }
 
