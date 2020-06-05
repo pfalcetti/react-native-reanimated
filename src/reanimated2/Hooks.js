@@ -231,9 +231,11 @@ function styleUpdater(viewTag, updater, state) {
     state.animations = {};
   }
 
+  const { assign } = Object; // @babel/plugin-transform-object-assign
+
   // calculate diff
   const diff = styleDiff(oldValues, newValues);
-  state.last = Object.assign({}, oldValues, newValues);
+  state.last = assign({}, oldValues, newValues);
 
   if (Object.keys(diff).length !== 0) {
     updateProps(viewTag.value, diff);
