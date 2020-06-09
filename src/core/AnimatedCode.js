@@ -41,11 +41,6 @@ class Code extends React.PureComponent {
     this.always.__detach();
   }
   
-  componentDidUpdate() {
-    this.componentWillUnmount();
-    this.componentDidMount();
-  }
-  
   render() {
     return null;
   }
